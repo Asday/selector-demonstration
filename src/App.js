@@ -5,17 +5,34 @@ import { map } from 'lodash'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 
-import { toggleShowAllReviews } from 'models/app/actions'
+import {
+  nextPage,
+  previousPage,
+  specificPage,
+  toggleShowAllReviews,
+} from 'models/app/actions'
+import { pageSelector, pageSizeSelector } from 'models/app/selectors'
 import { loadReviews } from 'models/reviews/actions'
-import { reviewsSelector } from 'models/reviews/selectors'
+import {
+  pagedReviewsSelector,
+  reviewCountSelector,
+} from 'models/reviews/selectors'
+
+import Pagination from 'Pagination'
 
 const select = (state) => ({
-  reviews: reviewsSelector(state),
+  currentPage: pageSelector(state),
+  pageSize: pageSizeSelector(state),
+  reviewCount: reviewCountSelector(state),
+  reviews: pagedReviewsSelector(state),
 })
 
 const actions = (dispatch) => bindActionCreators(
   {
     onMount: loadReviews,
+    onNextPage: nextPage,
+    onPreviousPage: previousPage,
+    onSpecificPage: specificPage,
     onToggleShowAll: toggleShowAllReviews,
   },
   dispatch,
@@ -24,7 +41,12 @@ const actions = (dispatch) => bindActionCreators(
 export class App extends React.Component {
   static propTypes = {
     onMount: PropTypes.func.isRequired,
+    onNextPage: PropTypes.func.isRequired,
+    onPreviousPage: PropTypes.func.isRequired,
+    onSpecificPage: PropTypes.func.isRequired,
     onToggleShowAll: PropTypes.func.isRequired,
+    pageSize: PropTypes.number.isRequired,
+    reviewCount: PropTypes.number.isRequired,
     reviews: PropTypes.arrayOf(PropTypes.shape({
       id: PropTypes.number.isRequired,
       comment: PropTypes.string.isRequired,
@@ -62,7 +84,13 @@ export class App extends React.Component {
 
   render = () => {
     const {
+      currentPage,
+      onNextPage,
+      onPreviousPage,
+      onSpecificPage,
       onToggleShowAll,
+      pageSize,
+      reviewCount,
     } = this.props
 
     return (
@@ -72,6 +100,14 @@ export class App extends React.Component {
         <button type="button" onClick={onToggleShowAll}>
           Toggle show all
         </button>
+        <Pagination
+          itemCount={reviewCount}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onNext={onNextPage}
+          onPrevious={onPreviousPage}
+          onSpecific={onSpecificPage}
+        />
       </div>
     )
   }
